@@ -1,0 +1,25 @@
+Restaurant Name: Saigon Kitchen
+Location: Sai Gon, VietNam
+
+Vietnamese Menu:
+
+Broken Rice - VND. 30
+Vietnamese Bread - VND. 60
+Noodle Soup - VND. 20
+Pho - VND. 40
+Bun Cha - VND. 30
+
+
+English Menu:
+
+Pancake - VND. 70
+Oatmeal with honey - VND. 50
+Waffles - VND. 50
+
+
+Beverages:
+
+Black coffee - VND. 20
+Vietnamese milk coffee - VND. 25
+pepsi - VND. 15
+coke - VND. 10

@@ -2,7 +2,8 @@ from qdrant_client import QdrantClient
 from llama_index.llms.ollama import Ollama
 from llama_index.core import SimpleDirectoryReader
 from llama_index.core.memory import ChatMemoryBuffer
-from llama_index.core import ServiceContext, VectorStoreIndex
+from llama_index.core import Settings, VectorStoreIndex
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.core.storage.storage_context import StorageContext
 
@@ -16,9 +17,12 @@ class AIVoiceAssistant:
         self._qdrant_url = "http://localhost:6333"
         self._client = QdrantClient(url=self._qdrant_url, prefer_grpc=False)
         self._llm = Ollama(model="mistral", request_timeout=120.0)
-        self._service_context = ServiceContext.from_defaults(
-            llm=self._llm, embed_model="local"
+
+        Settings.llm = self._llm
+        Settings.embed_model = HuggingFaceEmbedding(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
+
         self._index = None
         self._create_kb()
         self._create_chat_engine()
@@ -33,15 +37,14 @@ class AIVoiceAssistant:
 
     def _create_kb(self):
         try:
-            reader = SimpleDirectoryReader(input_files=[r"rag\the_flow_info.txt"])
+            reader = SimpleDirectoryReader(input_files=[r"rag\Menu.txt"])
             documents = reader.load_data()
             vector_store = QdrantVectorStore(
-                client=self._client, collection_name="kitchen_db"
+                client=self._client, collection_name="theflow_db"
             )
             storage_context = StorageContext.from_defaults(vector_store=vector_store)
             self._index = VectorStoreIndex.from_documents(
                 documents,
-                service_context=self._service_context,
                 storage_context=storage_context,
             )
             print("Knowledgebase created successfully!")
@@ -56,17 +59,12 @@ class AIVoiceAssistant:
     @property
     def _prompt(self):
         return """
-            You are a professional AI Assistant working for The Flow — a premium personal training service based in Ho Chi Minh City, Vietnam.
+            You are a professional AI Assistant receptionist working in VietNam's one of the best restaurant called Saigon Kitchen,
+            Ask questions mentioned inside square brackets which you have to ask from customer, DON'T ASK THESE QUESTIONS 
+            IN ONE go and keep the conversation engaging ! always ask question one by one only!
+            
+            [Ask Name and contact number, what they want to order and end the conversation with greetings!]
 
-            Your job is to guide potential customers through registration by asking the following questions (one at a time, never all at once):
-
-            [Ask for the customer's name and contact number.
-            Then ask which training package they are interested in (1-on-1, 2-person, or 3-person).
-            Then confirm their preferred training language (English or Vietnamese).
-            Then inform them briefly about the Terms of Rule, including attendance and cancellation policy.
-            Finally, thank them and end with a friendly goodbye.]
-
-            If you don’t know the answer, say you don’t know. Never make things up.
-            Always keep replies short, under 10 words.
-            Do not chat with yourself.
-        """
+            If you don't know the answer, just say that you don't know, don't try to make up an answer.
+            Provide concise and short answers not more than 10 words, and don't chat with yourself!
+            """
